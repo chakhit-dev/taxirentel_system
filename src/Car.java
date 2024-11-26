@@ -1,3 +1,6 @@
+
+import java.util.Set;
+
 abstract class Car {
     protected String carID;
     protected String model;
@@ -19,6 +22,18 @@ abstract class Car {
 
     public double getPrice() {
         return price;
+    }
+
+    public void setCarID(String carID) {
+        this.carID = carID;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     public abstract double calculateFinalPrice();

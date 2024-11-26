@@ -1,5 +1,7 @@
 
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -51,6 +53,13 @@ public class QueryModule {
         Random random = new Random();
         int number = random.nextInt(90000) + 10000;
         return "DRV" + number;
+    }
+    
+// Generate Booking
+    public static String generateBookingID() {
+        Random random = new Random();
+        int number = random.nextInt(90000) + 10000;
+        return "BK" + number;
     }
     
     
@@ -475,6 +484,141 @@ public class QueryModule {
         }
         return 0;
     }
+    
+    
+    
+// Booking
+    
+    public List<Car> fetchSedan1() {
+        String query = "SELECT * FROM vehicle_model WHERE vehicle_type = 'Sedan'";
+        List<Car> data = new ArrayList<>();
+
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                
+                SedanCar sc = new SedanCar(rs.getString("vehicle_id"), rs.getString("model"), rs.getInt("price"));
+                data.add(sc);
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return data;
+    }
+    
+    //loadBooking information
+    public List<Booking> fetchBookingSedan(Car car, Driver dv, TimeSlot ts) {
+        List<Booking> bk_data = new ArrayList<>();
+
+        String bk_query = "SELECT * FROM booking WHERE vehicle_type = 'Sedan'";
+        
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(bk_query);
+            while (rs.next()) {
+                
+                String modelQ = rs.getString("model");
+                
+                Booking bk = new Booking(rs.getString("booking_id"), car, dv, rs.getString("date"), ts);
+                bk.getCar().setModel(modelQ);
+                bk_data.add(bk);
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }     
+        
+        return bk_data;
+    }
+    
+    public List<Booking> fetchBookingUtilityCar(Car car, Driver dv, TimeSlot ts) {
+        List<Booking> bk_data = new ArrayList<>();
+
+        String bk_query = "SELECT * FROM booking WHERE vehicle_type = 'Utility'";
+        
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(bk_query);
+            while (rs.next()) {
+                
+                Booking bk = new Booking(rs.getString("booking_id"), car, dv, rs.getString("date"), ts);
+                bk_data.add(bk);
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }     
+        
+        return bk_data;
+    }
+    
+    
+    public Booking fetchBookingSedanByID(Car car, Driver dv, TimeSlot ts, String id) {
+        Booking bk = null;
+        String bk_query = "SELECT * FROM booking WHERE vehicle_type = 'Sedan' and booking_id = ?";
+
+        try {
+            ps = con.prepareStatement(bk_query);
+            ps.setString(1, id);
+
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                // ใช้ dv แทน driver และ ts แทน timeSlot
+                bk = new Booking(id, car, dv, rs.getString("date"), ts); 
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return bk;
+    }
+
+    public int insertBooking(Booking bk) {
+        
+        try {
+            String query = "INSERT INTO booking (booking_id, vehicle_type, driver_id, model, date) VALUES (?, ?, ?, ?, ?)";
+            
+            String gbid = generateBookingID(); // Generate CarID
+            bk.setBookingID(gbid);
+            
+            LocalDateTime timenow = LocalDateTime.now();
+            DateTimeFormatter timeformat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String formattedDate = timenow.format(timeformat);
+            
+            ps = con.prepareStatement(query);
+            ps.setString(1, bk.getBookingID());
+            ps.setString(2, "Sedan");
+            ps.setString(3, bk.getDriver().getDriverID());
+            ps.setString(4, bk.getCar().getModel());
+            ps.setString(5, formattedDate);
+            
+            int status = ps.executeUpdate();
+            
+            if(status == 1){
+                return 1;
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
