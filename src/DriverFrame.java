@@ -285,6 +285,7 @@ public class DriverFrame extends javax.swing.JFrame {
         jMenu2.setText("Driver");
 
         jMenuItem2.setText("Manager");
+        jMenuItem2.setEnabled(false);
         jMenu2.add(jMenuItem2);
 
         jMenuBar1.add(jMenu2);
@@ -293,6 +294,11 @@ public class DriverFrame extends javax.swing.JFrame {
 
         jMenuItem4.setText("Manager");
         jMenuItem4.setToolTipText("");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
         jMenu3.add(jMenuItem4);
 
         jMenuBar1.add(jMenu3);
@@ -300,6 +306,11 @@ public class DriverFrame extends javax.swing.JFrame {
         jMenu4.setText("Time");
 
         jMenuItem3.setText("Manager");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
         jMenu4.add(jMenuItem3);
 
         jMenuBar1.add(jMenu4);
@@ -368,7 +379,8 @@ public class DriverFrame extends javax.swing.JFrame {
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         // TODO add your handling code here:
-        new DriverFrame().setVisible(true);
+        this.dispose();
+        new BookingFrameSedan().setVisible(true);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
@@ -443,6 +455,18 @@ public class DriverFrame extends javax.swing.JFrame {
         jTextField3.setText("");
         jTextField4.setText("");
     }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+        new CarFrame().setVisible(true);
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+        new TimeFrame().setVisible(true);
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     /**
      * @param args the command line arguments

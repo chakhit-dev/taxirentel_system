@@ -1,6 +1,7 @@
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -176,6 +177,10 @@ public class QueryModule {
             stmt = con.createStatement();
             rs = stmt.executeQuery(query);
             while (rs.next()) {
+                
+                //String carmodel = rs.getString("model");
+                
+                //System.out.println("[QUERY FROM fetchSedan] " + carmodel);
                 
                 SedanCar sc = new SedanCar(rs.getString("vehicle_id"), rs.getString("model"), rs.getInt("price"));
                 data.add(sc);
@@ -512,19 +517,31 @@ public class QueryModule {
     //loadBooking information
     public List<Booking> fetchBookingSedan(Car car, Driver dv, TimeSlot ts) {
         List<Booking> bk_data = new ArrayList<>();
-
+        
         String bk_query = "SELECT * FROM booking WHERE vehicle_type = 'Sedan'";
         
         try {
             stmt = con.createStatement();
             rs = stmt.executeQuery(bk_query);
             while (rs.next()) {
+                //System.out.println("car.getModel(); + " + car.getModel());
+
+                
+//                System.out.println("rs.next() : " + rs.getString("model"));
                 
                 String modelQ = rs.getString("model");
+                String date = rs.getString("date");
+                
+                
                 
                 Booking bk = new Booking(rs.getString("booking_id"), car, dv, rs.getString("date"), ts);
-                bk.getCar().setModel(modelQ);
+                
+                //bk.getCar().setModel(modelQ);
+                
                 bk_data.add(bk);
+                
+                //System.out.println("[Query] getCar() : " + bk.getCar());
+                //System.out.println(bk.getBookingID() + bk.getCar() + date + bk.getTimeSlot());
             }
 
         } catch (SQLException ex) {
@@ -543,9 +560,10 @@ public class QueryModule {
             stmt = con.createStatement();
             rs = stmt.executeQuery(bk_query);
             while (rs.next()) {
-                
+                        
                 Booking bk = new Booking(rs.getString("booking_id"), car, dv, rs.getString("date"), ts);
                 bk_data.add(bk);
+                
             }
 
         } catch (SQLException ex) {
@@ -556,45 +574,218 @@ public class QueryModule {
     }
     
     
-    public Booking fetchBookingSedanByID(Car car, Driver dv, TimeSlot ts, String id) {
-        Booking bk = null;
-        String bk_query = "SELECT * FROM booking WHERE vehicle_type = 'Sedan' and booking_id = ?";
 
-        try {
-            ps = con.prepareStatement(bk_query);
-            ps.setString(1, id);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    public SedanCar fetchSedan_Test(String vehicleId) {
+        String query = "SELECT * FROM vehicle_model WHERE vehicle_id = ?";
+        SedanCar sedanCar = null;
 
-            rs = ps.executeQuery();
-
-            if (rs.next()) {
-                // ใช้ dv แทน driver และ ts แทน timeSlot
-                bk = new Booking(id, car, dv, rs.getString("date"), ts); 
+        try (PreparedStatement stmt = con.prepareStatement(query)) {
+            stmt.setString(1, vehicleId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    sedanCar = new SedanCar(rs.getString("vehicle_id"), rs.getString("model"), rs.getInt("price"));
+                }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        return bk;
+        return sedanCar;
     }
 
-    public int insertBooking(Booking bk) {
+    
+    
+    
+    public Driver fetchDriver_Test(String id) {
+        String query = "SELECT * FROM driver WHERE id = ?";
+        Driver driver = null;
+
+        try (PreparedStatement stmt = con.prepareStatement(query)) {
+            stmt.setString(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    driver = new Driver(rs.getString("id"), rs.getString("name"), rs.getString("address"), rs.getInt("phone"));
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return driver;
+    }
+
+    
+    public TimeSlot fetchTimeSlot_Test() {
+        String query = "SELECT * FROM time_active";
+        TimeSlot ts = null;
+
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(query);
+            if (rs.next()) {
+                ts = new TimeSlot(rs.getString("start_time"), rs.getString("end_time"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return ts;
+    }   
+    
+    
+    
+    
+    
+    
+    public List<Booking> fetchBookingAll() {
+        String query = "SELECT * FROM booking";
+        List<Booking> data = new ArrayList<>();
+        
+        TimeSlot ts = fetchTimeSlot_Test();
         
         try {
-            String query = "INSERT INTO booking (booking_id, vehicle_type, driver_id, model, date) VALUES (?, ?, ?, ?, ?)";
-            
-            String gbid = generateBookingID(); // Generate CarID
-            bk.setBookingID(gbid);
-            
-            LocalDateTime timenow = LocalDateTime.now();
-            DateTimeFormatter timeformat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String formattedDate = timenow.format(timeformat);
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                SedanCar sc = fetchSedan_Test(rs.getString("vehicle_id"));
+                Driver dv = fetchDriver_Test(rs.getString("driver_id"));
+                String Date = rs.getString("date");
+
+                Booking bk = new Booking(rs.getString("booking_id"), sc, dv, Date, ts);
+                data.add(bk);
+
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return data;
+    }
+    
+   
+    
+    
+    public List<Booking> fetchBookingByBookingID(String id) {
+        String query = "SELECT * FROM booking WHERE booking_id = ?";
+        List<Booking> data = new ArrayList<>();
+
+        // Assuming fetchTimeSlot_Test() returns a TimeSlot based on the current context
+        TimeSlot ts = fetchTimeSlot_Test();  // This function should be modified if necessary to handle specific context
+
+        try (PreparedStatement stmt = con.prepareStatement(query)) {
+            stmt.setString(1, id);  // Set the booking_id parameter
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    // Fetch associated SedanCar and Driver objects
+                    SedanCar sc = fetchSedan_Test(rs.getString("vehicle_id"));
+                    Driver dv = fetchDriver_Test(rs.getString("driver_id"));
+                    String bookingDate = rs.getString("date");  // Renaming 'Date' to 'bookingDate' to avoid confusion
+                    Booking bk = new Booking(rs.getString("booking_id"), sc, dv, bookingDate, ts);
+                    data.add(bk);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return data;
+    }
+
+    
+    
+    
+    
+    
+    public List<Booking> fetchBookingByID(String id) {
+        String query = "SELECT * FROM booking WHERE booking_id = ?";
+        List<Booking> data = new ArrayList<>();
+
+        // Assuming fetchTimeSlot_Test() returns a TimeSlot based on the current context
+        TimeSlot ts = fetchTimeSlot_Test();  // This function should be modified if necessary to handle specific context
+
+        try (PreparedStatement stmt = con.prepareStatement(query)) {
+            stmt.setString(1, id);  // Set the booking_id parameter
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    SedanCar sc = fetchSedan_Test(rs.getString("vehicle_id"));
+                    Driver dv = fetchDriver_Test(rs.getString("driver_id"));
+                    String bookingDate = rs.getString("date");  // Renaming 'Date' to 'bookingDate' to avoid confusion
+                    Booking bk = new Booking(rs.getString("booking_id"), sc, dv, bookingDate, ts);
+                    data.add(bk);
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return data;
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+ 
+
+    public int insertBooking(Booking bk, String dv_id, String ml_id) {
+        
+        LocalDateTime mytime = LocalDateTime.now();
+        DateTimeFormatter timeformat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedDate = mytime.format(timeformat);
+        
+        try {
+            String query = "INSERT INTO booking (booking_id, vehicle_id, driver_id, date) VALUES (?, ?, ?, ?)";
             
             ps = con.prepareStatement(query);
             ps.setString(1, bk.getBookingID());
-            ps.setString(2, "Sedan");
-            ps.setString(3, bk.getDriver().getDriverID());
-            ps.setString(4, bk.getCar().getModel());
-            ps.setString(5, formattedDate);
+            ps.setString(2, ml_id);
+            ps.setString(3, dv_id);
+            ps.setString(4, formattedDate);
+            
+            int status = ps.executeUpdate();
+            
+            if(status == 1){
+                return 1;
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+    
+    
+    public int updateBooking(Booking bk, String bk_id_up, String dv_id_up, String ml_id_up) {   
+        
+        try {
+            String query = "UPDATE booking SET booking_id = ?, vehicle_id = ?, driver_id = ? WHERE booking_id = ?";
+            
+            ps = con.prepareStatement(query);
+            ps.setString(1, bk_id_up);
+            ps.setString(2, ml_id_up);
+            ps.setString(3, dv_id_up);
+            ps.setString(4, bk.getBookingID());
             
             int status = ps.executeUpdate();
             
@@ -610,7 +801,52 @@ public class QueryModule {
     
     
     
+    public int deleteBooking(String bk_id) {
+        String sql = "DELETE FROM booking WHERE booking_id = ?";
+        try {
+            
+            ps = con.prepareStatement(sql);
+            ps.setString(1, bk_id);
+            
+            int status = ps.executeUpdate();
+            return status;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
     
+    public int fetchTime(LocalTime indate) {
+        String query = "SELECT * FROM time_active WHERE start_time <= ? AND end_time >= ?";  // เช็คว่าเวลาปัจจุบันอยู่ในช่วงที่ระบุ
+
+        try (PreparedStatement stmt = con.prepareStatement(query)) {
+            // แปลง String เป็น LocalTime ก่อน
+            stmt.setTime(1, Time.valueOf(indate));
+            stmt.setTime(2, Time.valueOf(indate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    // ดึงเวลา start_time และ end_time จากฐานข้อมูล
+                    Time startTime = rs.getTime("start_time");
+                    Time endTime = rs.getTime("end_time");
+
+                    // แปลง Time จากฐานข้อมูลเป็น LocalTime
+                    LocalTime startLocalTime = startTime.toLocalTime();
+                    LocalTime endLocalTime = endTime.toLocalTime();
+
+                    // เปรียบเทียบเวลาในฐานข้อมูลกับเวลา indate
+                    if (indate.isAfter(startLocalTime) && indate.isBefore(endLocalTime)) {
+                        return 1;  // ถ้าอยู่ในช่วงเวลาที่กำหนด
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(QueryModule.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return 0;  // ถ้าไม่พบช่วงเวลาที่ตรงกับเงื่อนไข
+    }
     
     
     
